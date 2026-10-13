@@ -70,17 +70,14 @@ The final grammar includes all four arithmetic operators, parentheses, identifie
 The grammar is left-recursive. This form is suitable for explaining CFG derivations and parse trees, but a conventional recursive descent parser cannot implement it directly without transformation. Member 2 is responsible for using an equivalent non-left-recursive grammar in the parser implementation.
 
 The theory grammar and the implementation grammar should describe the same language and preserve the intended operator precedence and associativity.
-## 7. Member 1 Responsibility
 
-Member 1 is responsible for documenting the CFG rules, tracing derivations for three expressions, and preparing parse trees by hand.
-
-## 8. Derivations and Parse Trees
+## 7. Derivations and Parse Trees
 
 Three example expressions will be selected to demonstrate how valid expressions are generated using the CFG. Each derivation will show the sequence of production rules applied, and each corresponding parse tree will show the hierarchical structure of the expression.
 
 The selected examples should demonstrate operator precedence and the use of parentheses. The derivations and parse trees will be completed as part of Member 1's theory work.
 
-### 8.1 Derivation of `a + b * c`
+### 7.1 Derivation of `a + b * c`
 
 **Expression:** `a + b * c`
 
@@ -106,7 +103,7 @@ a + b * c
 
 **Result:** The expression is valid according to the CFG. The grammar places multiplication inside `T`, so `b * c` is grouped before addition.
 
-### 8.2 Derivation of `(a + b) * c`
+### 7.2 Derivation of `(a + b) * c`
 
 **Expression:** `(a + b) * c`
 
@@ -132,7 +129,7 @@ Replacing `id` with `a`, `b`, and `c` gives `(a + b) * c`.
 **Result:** The expression is valid according to the CFG. The parentheses force `a + b` to be evaluated as a group before multiplication by `c`.
 
 
-### 8.3 Derivation of `((x - y) / z) + 1`
+### 7.3 Derivation of `((x - y) / z) + 1`
 
 **Expression:** `((x - y) / z) + 1`
 
@@ -167,9 +164,9 @@ Replacing `id` with `x`, `y`, and `z`, and `num` with `1`, gives:
 
 **Result:** The expression is valid according to the CFG. The grammar allows subtraction inside the parentheses, division by `z`, and addition of `1`. The parentheses determine the grouping of the expression.
 
-## 9. Parse Trees
+## 8. Parse Trees
 
-### 9.1 Parse Tree for `a + b * c`
+### 8.1 Parse Tree for `a + b * c`
 
 ```text
                  E
@@ -183,7 +180,7 @@ Replacing `id` with `x`, `y`, and `z`, and `num` with `1`, gives:
            id(a) id(b)
 ```
 
-### 9.2 Parse Tree for `(a + b) * c`
+### 8.2 Parse Tree for `(a + b) * c`
 
 ```text
                  E
@@ -205,7 +202,7 @@ Replacing `id` with `x`, `y`, and `z`, and `num` with `1`, gives:
           id(a)
 ```
 
-### 9.3 Parse Tree for `((x - y) / z) + 1`
+### 8.3 Parse Tree for `((x - y) / z) + 1`
 
 ```text
                          E
@@ -237,21 +234,21 @@ Replacing `id` with `x`, `y`, and `z`, and `num` with `1`, gives:
 
 
 
-## 10. Pushdown Automaton (PDA) Theory
+## 9. Pushdown Automaton (PDA) Theory
 
-### 10.1 What is a PDA?
+### 9.1 What is a PDA?
 
 A Pushdown Automaton (PDA) is a computational model that uses a stack to recognize languages. Unlike a finite automaton, a PDA has additional memory in the form of a stack.
 
 A PDA is important in parsing because it can handle nested structures, such as parentheses in arithmetic expressions.
 
-### 10.2 Role of PDA in the Mini Expression Parser
+### 9.2 Role of PDA in the Mini Expression Parser
 
 The Mini Expression Parser uses a Context-Free Grammar (CFG) to define valid arithmetic expressions. A PDA can recognize the language described by a CFG by using its stack to track grammar symbols and match the input according to production rules.
 
 For this project, the PDA concept helps explain how an expression such as `((x - y) / z) + 1` can be processed while respecting nested parentheses and the grammatical structure of arithmetic operations.
 
-### 10.3 Basic Working Principle
+### 9.3 Basic Working Principle
 
 1. The input expression is provided to the automaton.
 2. The stack stores grammar symbols that still need to be processed.
@@ -261,7 +258,7 @@ For this project, the PDA concept helps explain how an expression such as `((x -
 
 A CFG can be converted into an equivalent PDA. This explains the theoretical relationship between the grammar used to describe expressions and the stack-based model used to recognize them.
 
-### 10.4 Example: Parentheses
+### 9.4 Example: Parentheses
 
 Consider the expression `(a + b) * c`.
 
@@ -269,6 +266,6 @@ The PDA concept helps explain how nested parentheses are handled. The opening pa
 
 Tracking parentheses alone is not enough to validate the entire arithmetic expression. The operators, operands, and their arrangement must also satisfy the grammar.
 
-### 10.5 Conclusion
+### 9.5 Conclusion
 
 The CFG defines the syntax of valid expressions, derivations show how expressions can be generated from the grammar, and parse trees represent their hierarchical structure. PDA theory explains how stack-based computation can recognize context-free languages and handle nested structures.
