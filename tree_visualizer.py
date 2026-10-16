@@ -1,0 +1,149 @@
+
+class Node:
+    def __init__(self, value, children=None):
+        self.value = value
+        self.children = children if children is not None else []
+
+
+def print_tree(node, prefix="", is_last=True, is_root=True):
+    if is_root:
+        print(node.value)
+    else:
+        branch = "└── " if is_last else "├── "
+        print(prefix + branch + node.value)
+
+    if is_root:
+        child_prefix = ""
+    else:
+        child_prefix = prefix + ("    " if is_last else "│   ")
+
+    for i, child in enumerate(node.children):
+        last_child = i == len(node.children) - 1
+        print_tree(child, child_prefix, last_child, False)
+
+
+class RecursiveDescentParser:
+    def __init__(self, expression):
+        self.expression = "".join(expression.split())
+        self.pos = 0
+
+    def current(self):
+        if self.pos < len(self.expression):
+            return self.expression[self.pos]
+        return None
+
+    def eat(self, expected):
+        if self.current() == expected:
+            self.pos += 1
+        else:
+            raise SyntaxError(
+                f"Expected '{expected}' at position {self.pos}"
+            )
+
+    # E -> T E'
+    def E(self):
+        return Node("E", [self.T(), self.E_prime()])
+
+    # E' -> + T E' | - T E' | epsilon
+    def E_prime(self):
+        if self.current() in ("+", "-"):
+            operator = self.current()
+            self.eat(operator)
+            return Node(
+                "E'",
+                [Node(operator), self.T(), self.E_prime()]
+            )
+
+        return Node("E'", [Node("ε")])
+
+    # T -> F T'
+    def T(self):
+        return Node("T", [self.F(), self.T_prime()])
+
+    # T' -> * F T' | / F T' | epsilon
+    def T_prime(self):
+        if self.current() in ("*", "/"):
+            operator = self.current()
+            self.eat(operator)
+            return Node(
+                "T'",
+                [Node(operator), self.F(), self.T_prime()]
+            )
+
+        return Node("T'", [Node("ε")])
+
+    # F -> (E) | id | num
+    def F(self):
+        current = self.current()
+
+        if current == "(":
+            self.eat("(")
+            expression_node = self.E()
+            self.eat(")")
+            return Node(
+                "F",
+                [Node("("), expression_node, Node(")")]
+            )
+
+        if current is not None and current.isalpha():
+            start = self.pos
+
+            while (
+                self.current() is not None
+                and self.current().isalnum()
+            ):
+                self.pos += 1
+
+            identifier = self.expression[start:self.pos]
+            return Node("F", [Node("id: " + identifier)])
+
+        if current is not None and current.isdigit():
+            start = self.pos
+
+            while (
+                self.current() is not None
+                and self.current().isdigit()
+            ):
+                self.pos += 1
+
+            number = self.expression[start:self.pos]
+            return Node("F", [Node("num: " + number)])
+
+        raise SyntaxError(
+            f"Expected an identifier, number, or '(' "
+            f"at position {self.pos}"
+        )
+
+    def parse(self):
+        if not self.expression:
+            raise SyntaxError("Expression cannot be empty")
+
+        root = self.E()
+
+        if self.current() is not None:
+            raise SyntaxError(
+                f"Unexpected symbol '{self.current()}' "
+                f"at position {self.pos}"
+            )
+
+        return root
+
+
+def main():
+    expression = input("Enter an arithmetic expression: ")
+
+    try:
+        parser = RecursiveDescentParser(expression)
+        root = parser.parse()
+
+        print("\nValid expression!")
+        print("\nGrammar Parse Tree:")
+        print_tree(root)
+
+    except SyntaxError as error:
+        print("\nInvalid expression!")
+        print("Error:", error)
+
+
+if __name__ == "__main__":
+    main()
