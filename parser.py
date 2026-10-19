@@ -1,4 +1,17 @@
-class RecursiveDescentParser:
+
+import sys
+
+from errors import (
+    invalid_character,
+    missing_closing_parenthesis,
+    missing_operand,
+    unexpected_closing_parenthesis,
+    unexpected_operator,
+    unexpected_token,
+)
+
+
+class Parser:
     def __init__(self, expression):
         self.expression = expression
         self.pos = 0
@@ -9,12 +22,35 @@ class RecursiveDescentParser:
         return None
 
     def eat(self, expected):
-        if self.current() == expected:
+        current = self.current()
+
+        if current == expected:
             self.pos += 1
-        else:
-            raise SyntaxError(
-                f"Expected '{expected}' at position {self.pos}"
+            return
+
+        if expected == ")" and current is None:
+            position = self.pos
+            if self.expression.startswith("("):
+                position = len(self.expression)
+            else:
+                position = max(0, self.pos - 1)
+            raise missing_closing_parenthesis(position)
+
+        if current == ")":
+            raise unexpected_closing_parenthesis(
+                self.pos, found=")"
             )
+
+        if current in ("+", "-", "*", "/"):
+            raise unexpected_operator(
+                self.pos, found=current
+            )
+
+        raise unexpected_token(
+            self.pos,
+            found=current,
+            expected=repr(expected),
+        )
 
     # E -> T E'
     def E(self):
@@ -24,8 +60,15 @@ class RecursiveDescentParser:
     # E' -> + T E' | - T E' | epsilon
     def E_prime(self):
         while self.current() in ("+", "-"):
-            operator = self.current()
-            self.eat(operator)
+            self.pos += 1
+
+            if self.current() is None or self.current() in (
+                "+", "-", "*", "/", ")"
+            ):
+                if self.current() == ")":
+                    raise missing_operand(self.pos)
+                raise missing_operand(self.pos)
+
             self.T()
 
     # T -> F T'
@@ -36,63 +79,121 @@ class RecursiveDescentParser:
     # T' -> * F T' | / F T' | epsilon
     def T_prime(self):
         while self.current() in ("*", "/"):
-            operator = self.current()
-            self.eat(operator)
+            self.pos += 1
+
+            if self.current() is None or self.current() in (
+                "+", "-", "*", "/", ")"
+            ):
+                raise missing_operand(self.pos)
+
             self.F()
 
     # F -> (E) | id | num
     def F(self):
         current = self.current()
 
+        if current is None:
+            raise missing_operand(self.pos)
+
         if current == "(":
-            self.eat("(")
+            self.pos += 1
+
+            if self.current() == ")":
+                raise missing_operand(self.pos)
+
             self.E()
+
+            if self.current() is None:
+                # Report the missing ')' position.
+                if self.expression.startswith("("):
+                    position = len(self.expression)
+                else:
+                    position = max(0, self.pos - 1)
+
+                raise missing_closing_parenthesis(position)
+
             self.eat(")")
+            return
 
-        elif current is not None and current.isalpha():
-            while (
-                self.current() is not None
-                and self.current().isalnum()
+        if current.isalpha() or current == "_":
+            while self.current() is not None and (
+                self.current().isalnum() or self.current() == "_"
             ):
                 self.pos += 1
+            return
 
-        elif current is not None and current.isdigit():
-            while (
-                self.current() is not None
-                and self.current().isdigit()
+        if current.isdigit():
+            while self.current() is not None and (
+                self.current().isdigit() or self.current() == "."
             ):
                 self.pos += 1
+            return
 
-        else:
-            raise SyntaxError(
-                f"Expected an identifier, number, or '(' "
-                f"at position {self.pos}"
+        if current == ")":
+            raise unexpected_closing_parenthesis(
+                self.pos, found=")"
             )
+
+        if current in ("+", "-", "*", "/"):
+            raise unexpected_operator(
+                self.pos, found=current
+            )
+
+        if not current.isalnum() and current not in (
+            "_", ".", "(", ")"
+        ):
+            raise invalid_character(
+                self.pos, found=current
+            )
+
+        raise unexpected_token(
+            self.pos,
+            found=current,
+            expected="identifier, number, or '('",
+        )
 
     def parse(self):
         self.E()
 
         if self.current() is not None:
-            raise SyntaxError(
-                f"Unexpected symbol '{self.current()}' "
-                f"at position {self.pos}"
+            current = self.current()
+
+            if current == ")":
+                raise unexpected_closing_parenthesis(
+                    self.pos, found=")"
+                )
+
+            if current in ("+", "-", "*", "/"):
+                raise unexpected_operator(
+                    self.pos, found=current
+                )
+
+            raise unexpected_token(
+                self.pos,
+                found=current,
+                expected="operator or end of expression",
             )
+
+        return True
+
+
+def parse(expression):
+    parser = Parser(expression)
+    return parser.parse()
+RecursiveDescentParser = Parser
 
 
 def main():
-    expression = input("Enter an arithmetic expression: ")
-
-    # Remove spaces before parsing
-    expression = "".join(expression.split())
-
-    parser = RecursiveDescentParser(expression)
+    if len(sys.argv) > 1:
+        expression = " ".join(sys.argv[1:])
+    else:
+        expression = input("Enter an expression: ")
 
     try:
-        parser.parse()
-        print("Valid expression!")
+        parse(expression)
+        print("Valid expression")
     except SyntaxError as error:
-        print("Invalid expression!")
-        print("Error:", error)
+        print(f"Invalid expression: {error}")
 
 
 if __name__ == "__main__":
