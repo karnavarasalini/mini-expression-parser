@@ -123,10 +123,26 @@ class Parser:
             return
 
         if current.isdigit():
+            decimal_points = 0
+
             while self.current() is not None and (
                 self.current().isdigit() or self.current() == "."
             ):
+                if self.current() == ".":
+                    decimal_points += 1
+
+                    if decimal_points > 1:
+                        raise invalid_character(
+                            self.pos, found="."
+                        )
+
                 self.pos += 1
+
+            if self.expression[self.pos - 1] == ".":
+                raise invalid_character(
+                    self.pos - 1, found="."
+                )
+
             return
 
         if current == ")":
