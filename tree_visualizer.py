@@ -24,13 +24,22 @@ def print_tree(node, prefix="", is_last=True, is_root=True):
 
 class RecursiveDescentParser:
     def __init__(self, expression):
-        self.expression = "".join(expression.split())
+        self.expression = expression
         self.pos = 0
 
+    def skip_spaces(self):
+        while (
+            self.pos < len(self.expression)
+            and self.expression[self.pos].isspace()
+        ):
+            self.pos += 1
+
     def current(self):
+        self.skip_spaces()
         if self.pos < len(self.expression):
             return self.expression[self.pos]
         return None
+
 
     def eat(self, expected):
         if self.current() == expected:
@@ -89,10 +98,11 @@ class RecursiveDescentParser:
             start = self.pos
 
             while (
-                self.current() is not None
-                and self.current().isalnum()
+                self.pos < len(self.expression)
+                and self.expression[self.pos].isalnum()
             ):
                 self.pos += 1
+
 
             identifier = self.expression[start:self.pos]
             return Node("F", [Node("id: " + identifier)])
@@ -109,10 +119,18 @@ class RecursiveDescentParser:
             number = self.expression[start:self.pos]
             return Node("F", [Node("num: " + number)])
 
+        found = self.current()
+
+        if found is None:
+            message = "found end of expression"
+        else:
+            message = f"found '{found}'"
+
         raise SyntaxError(
             f"Expected an identifier, number, or '(' "
-            f"at position {self.pos}"
+            f"at position {self.pos}, {message}"
         )
+
 
     def parse(self):
         if not self.expression:
