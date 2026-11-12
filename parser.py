@@ -62,12 +62,17 @@ class Parser:
         while self.current() in ("+", "-"):
             self.pos += 1
 
-            if self.current() is None or self.current() in (
-                "+", "-", "*", "/", ")"
-            ):
-                if self.current() == ")":
-                    raise missing_operand(self.pos)
+            current = self.current()
+            if current is None:
                 raise missing_operand(self.pos)
+            if current in ("+", "-", "*", "/"):
+                raise unexpected_operator(self.pos, found=current)
+            if current == ")":
+                raise missing_operand(
+                    self.pos,
+                    found=current,
+                    reason="Missing operand before closing parenthesis.",
+                )
 
             self.T()
 
@@ -81,10 +86,17 @@ class Parser:
         while self.current() in ("*", "/"):
             self.pos += 1
 
-            if self.current() is None or self.current() in (
-                "+", "-", "*", "/", ")"
-            ):
+            current = self.current()
+            if current is None:
                 raise missing_operand(self.pos)
+            if current in ("+", "-", "*", "/"):
+                raise unexpected_operator(self.pos, found=current)
+            if current == ")":
+                raise missing_operand(
+                    self.pos,
+                    found=current,
+                    reason="Missing operand before closing parenthesis.",
+                )
 
             self.F()
 
@@ -99,7 +111,11 @@ class Parser:
             self.pos += 1
 
             if self.current() == ")":
-                raise missing_operand(self.pos)
+                raise missing_operand(
+                    self.pos,
+                    found=")",
+                    reason="Missing operand before closing parenthesis.",
+                )
 
             self.E()
 
