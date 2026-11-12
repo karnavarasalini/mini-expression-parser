@@ -82,7 +82,6 @@ class RecursiveDescentParser:
         return Node("T'", [Node("ε")])
 
     # F -> (E) | id | num
-        # F -> (E) | id | num
     def F(self):
         current = self.current()
 
@@ -95,42 +94,29 @@ class RecursiveDescentParser:
                 [Node("("), expression_node, Node(")")]
             )
 
-        if current is not None and (
-            current.isalpha() or current == "_"
-        ):
+        if current is not None and current.isalpha():
             start = self.pos
 
-            while self.pos < len(self.expression) and (
-                self.expression[self.pos].isalnum()
-                or self.expression[self.pos] == "_"
+            while (
+                self.pos < len(self.expression)
+                and self.expression[self.pos].isalnum()
             ):
                 self.pos += 1
+
 
             identifier = self.expression[start:self.pos]
             return Node("F", [Node("id: " + identifier)])
 
         if current is not None and current.isdigit():
             start = self.pos
-            decimal_points = 0
 
-            while self.current() is not None and (
-                self.current().isdigit() or self.current() == "."
+            while (
+                self.current() is not None
+                and self.current().isdigit()
             ):
-                if self.current() == ".":
-                    decimal_points += 1
-                    if decimal_points > 1:
-                        raise SyntaxError(
-                            f"Invalid number at position {self.pos}"
-                        )
                 self.pos += 1
 
             number = self.expression[start:self.pos]
-
-            if number.endswith("."):
-                raise SyntaxError(
-                    f"Invalid number at position {self.pos - 1}"
-                )
-
             return Node("F", [Node("num: " + number)])
 
         found = self.current()
@@ -144,6 +130,8 @@ class RecursiveDescentParser:
             f"Expected an identifier, number, or '(' "
             f"at position {self.pos}, {message}"
         )
+
+
     def parse(self):
         if not self.expression:
             raise SyntaxError("Expression cannot be empty")
